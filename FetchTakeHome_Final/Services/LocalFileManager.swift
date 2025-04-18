@@ -13,7 +13,6 @@ class LocalFileManager {
 	 static let instance = LocalFileManager()
 	 private let fileManager = FileManager.default
 	 private let cacheDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-
 	 private init() {}
 
 	 func saveImage(from urlString: String?, for uuid: String) async throws {
@@ -21,11 +20,20 @@ class LocalFileManager {
 				 print("Invalid or missing URL for uuid: \(uuid)")
 				 return
 			}
-			let (data, _) = try await URLSession.shared.data(from: url)
-			let fileURL = cacheDirectory.appendingPathComponent("\(uuid).jpg")
-			try data.write(to: fileURL)
-	 }
 
+			let fileURL = cacheDirectory.appendingPathComponent("\(uuid).jpg")
+
+				 // Check if the image already exists
+			if FileManager.default.fileExists(atPath: fileURL.path) {
+				 print("Image already exists for uuid: \(uuid), skipping download")
+				 return
+			}
+
+			let (data, _) = try await URLSession.shared.data(from: url)
+			print("Downloading Image \(uuid)")
+			try data.write(to: fileURL)
+
+	 }
 	 func retrieveImages(for uuid: String) -> UIImage? {
 			let fileURL = cacheDirectory.appendingPathComponent("\(uuid).jpg")
 			print("Retreiving File Manager Image: \(uuid)")
